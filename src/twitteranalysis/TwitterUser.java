@@ -5,21 +5,21 @@ package twitteranalysis;
  *
  * @author Fraser
  */
-public class User {
+public class TwitterUser {
     
     private String id;
     private String firstName;
     private String lastName;
     private String twitterName;
 
-    public User(String id, String firstName, String lastName, String twitterName) {
+    public TwitterUser(String id, String firstName, String lastName, String twitterName) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.twitterName = twitterName;
     }
     
-    public User() {
+    public TwitterUser() {
         
     }
 

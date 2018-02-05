@@ -19,7 +19,7 @@ public class XYZWebApplicationDB {
     Returns: void
     Comments: inserts user to DB
      */
-    public void insertUser(User u) {
+    public void insertUser(TwitterUser u) {
         wrapper.createStatement();
         try {
             wrapper.getStatement().executeUpdate("insert into users values ('" + u.getId() + "', '" + u.getFirstName() + "', '" + u.getLastName() + "', '" + u.getTwitterName() + "')");
@@ -34,8 +34,8 @@ public class XYZWebApplicationDB {
     Returns: User
     Comments: Gets User from ID
      */
-    public User getUser(String id) {
-        User ret = new User();
+    public TwitterUser getUser(String id) {
+        TwitterUser ret = new TwitterUser();
         wrapper.createStatement();
         wrapper.findRecord("users", "id", id);
         try {
@@ -55,14 +55,14 @@ public class XYZWebApplicationDB {
     Returns: ArrayList : Member
     Comments: Returns arraylist of Members
      */
-    public ArrayList<User> getAllMembers() {
-        ArrayList ret = new ArrayList<User>();
+    public ArrayList<TwitterUser> getAllMembers() {
+        ArrayList ret = new ArrayList<TwitterUser>();
         wrapper.createStatement();
         wrapper.createResultSet("SELECT * FROM users");
         try {
             wrapper.getResultSet().next();
             do {
-                ret.add(new User(wrapper.getResultSet().getString("id"), wrapper.getResultSet().getString("firstName"), wrapper.getResultSet().getString("lastName"), wrapper.getResultSet().getString("twitterName")));
+                ret.add(new TwitterUser(wrapper.getResultSet().getString("id"), wrapper.getResultSet().getString("firstName"), wrapper.getResultSet().getString("lastName"), wrapper.getResultSet().getString("twitterName")));
             } while (wrapper.getResultSet().next());
         } catch (SQLException ex) {
             Logger.getLogger(XYZWebApplicationDB.class.getName()).log(Level.SEVERE, null, ex);
