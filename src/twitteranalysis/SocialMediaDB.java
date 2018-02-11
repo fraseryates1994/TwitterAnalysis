@@ -2,6 +2,7 @@ package twitteranalysis;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,4 +34,57 @@ public class SocialMediaDB {
         }
         return ret;
     }
+    
+    public ArrayList<String> getAllPositiveWords() {
+        ArrayList ret = new ArrayList<String>();
+        wrapper.createStatement();
+        wrapper.createResultSet("SELECT * FROM positivewords");
+        try {
+            wrapper.getResultSet().next();
+            do {
+                ret.add(wrapper.getResultSet().getString("word"));
+            } while (wrapper.getResultSet().next());
+        } catch (SQLException ex) {
+            Logger.getLogger(SocialMediaDB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return ret;
+    }
+    
+    public ArrayList<String> getAllNegativeWords() {
+        ArrayList ret = new ArrayList<String>();
+        wrapper.createStatement();
+        wrapper.createResultSet("SELECT * FROM negativewords");
+        try {
+            wrapper.getResultSet().next();
+            do {
+                ret.add(wrapper.getResultSet().getString("word"));
+            } while (wrapper.getResultSet().next());
+        } catch (SQLException ex) {
+            Logger.getLogger(SocialMediaDB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return ret;
+    }
+
+    public void insertWords(String fileName, String tableName) {
+        // Read from txt
+        Scanner scan = new Scanner(twitteranalysis.SocialMediaDB.class.getResourceAsStream(fileName));
+        ArrayList<String> array = new ArrayList();
+        int count = 1;
+
+        for (int i = 0; scan.hasNext() == true; i++) {
+            array.add(scan.next());
+        }
+
+        wrapper.createStatement();
+        try {
+            for (String string : array) {
+                wrapper.getStatement().executeUpdate("insert into "+tableName+"(id, word) values ("+count+",'"+string+"')");
+                count++;
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(JDBCWrapper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+   
 }
