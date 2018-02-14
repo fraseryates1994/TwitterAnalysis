@@ -8,6 +8,8 @@ import java.util.Date;
  */
 public class TwitterUser {
 
+    private String ogStatusID;
+    private String ogUserID;
     private String id;
     private String name;
     private String screenName;
@@ -22,5 +24,10 @@ public class TwitterUser {
     private String location;
     private boolean isVerified;
     private boolean hasSwear;
+    private boolean hasPositiveWord;
+    private boolean hasNegativeWord;
+    private boolean hasPositiveEmoji;
+    private boolean hasNegativeEmoji;
     
+   
 }

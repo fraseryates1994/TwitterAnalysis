@@ -19,12 +19,15 @@ public class FacebookWrapper {
     private Facebook facebook = null;
     
     public FacebookWrapper() {
+        JDBCWrapper wr = new JDBCWrapper("org.apache.derby.jdbc.ClientDriver", "jdbc:derby://localhost:1527/SocialMedia", "social", "fraz");
+        SocialMediaDB db = new SocialMediaDB(wr);
         ConfigurationBuilder cb = new ConfigurationBuilder();
+        
         cb.setDebugEnabled(true)
-                .setOAuthAppId("495582014171231")
-                .setOAuthAppSecret("e0a77dfc2ffb4a6871f757beb6e0a16f")
-                .setOAuthAccessToken("EAACEdEose0cBAMeZAeae13RBbKi4O9FdaqAphEnwo1ASGHiBUrdKOhbowwxjW4bRbCSx4nLdZBeERIKZA5eXzvp0bqzR6TuFcGjmRv363xwSQ2A4OE7fIaGhOqEhmzK4ak3PLXQfutY7VZCAKHh4mjKUtXFZBZBHqxghh1Hf06k4AgMNpVVMn7ZCWbCZC3ZBjqmCFvEke59E06wZDZD")
-                .setOAuthPermissions("fraseryates1994@gmail.com");
+                .setOAuthAppId(db.getKey("OAuthAppId").getKayValue())
+                .setOAuthAppSecret(db.getKey("OAuthAppSecret").getKayValue())
+                .setOAuthAccessToken(db.getKey("OAuthAccessToken").getKayValue())
+                .setOAuthPermissions(db.getKey("OAuthPermissions").getKayValue());
         FacebookFactory ff = new FacebookFactory(cb.build());
         Facebook facebook = ff.getInstance();
     }
