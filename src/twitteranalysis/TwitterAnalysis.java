@@ -1,9 +1,11 @@
 package twitteranalysis;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import twitter4j.RateLimitStatus;
 import twitter4j.Status;
 import twitter4j.TwitterException;
 //import twitter4j.*;
@@ -17,68 +19,102 @@ public class TwitterAnalysis {
     public static void main(String[] args) {
         TwitterWrapper tw = new TwitterWrapper();
         try {
-            System.out.println(tw.getTwitter().getRateLimitStatus());
+            Map<String, RateLimitStatus> rateLimitStatus = tw.getTwitter().getRateLimitStatus("search");
+            RateLimitStatus searchTweetsRateLimit = rateLimitStatus.get("/search/tweets");
+            System.out.printf("You have %d calls remaining out of %d, Limit resets in %d seconds\n",
+                    searchTweetsRateLimit.getRemaining(),
+                    searchTweetsRateLimit.getLimit(),
+                    searchTweetsRateLimit.getSecondsUntilReset());
+
+            String user = "kyliejenner";
+
+            System.out.println("Getting Statuses for... " + user);
+            ArrayList<Status> statuses = tw.getStatuses(user);
+            System.out.println("Total Statuses: " + statuses.size());
+
+            // Print first status
+            System.out.println("OG Status: " + statuses.get(1).getText() + "\n============================================");
+
+            // Get replies
+            System.out.println("Getting replies for most recent status...");
+            ArrayList<Status> replies = tw.getDiscussion(statuses.get(1));
+            System.out.println("Total Replies: " + replies.size());
+
+            // Print replies
+            for (int i = 0; i < replies.size(); i++) {
+                if ((getCountryFromLocation(replies.get(i)) != null)) {
+                    System.out.println("OG status ID - " + statuses.get(1).getId());
+                    System.out.println("OG user ID - " + statuses.get(1).getUser().getName());
+                    System.out.println("ID - " + replies.get(i).getUser().getId());
+                    System.out.println("Name - " + replies.get(i).getUser().getName());
+                    System.out.println("Screen Name - " + replies.get(i).getUser().getScreenName());
+                    System.out.println("Comment - " + replies.get(i).getText());
+                    System.out.println("hasSwear? - " + hasSwearWord(replies.get(i)));
+                    System.out.println("hasPositiveWord? - " + hasPositiveWord(replies.get(i)));
+                    System.out.println("hasNegativeWord? - " + hasNegativeWord(replies.get(i)));
+                    System.out.println("hasPositiveEmoji? - " + hasPositiveEmoji(replies.get(i)));
+                    System.out.println("hasNegativeEmoji? - " + hasNegativeEmoji(replies.get(i)));
+                    System.out.println("TimeZone - " + replies.get(i).getUser().getTimeZone());
+                    System.out.println("Lang - " + replies.get(i).getUser().getLang());
+                    System.out.println("Created at - " + replies.get(i).getUser().getCreatedAt());
+                    System.out.println("favouriteCount - " + replies.get(i).getFavoriteCount());
+                    System.out.println("followerscount - " + replies.get(i).getUser().getFollowersCount());
+                    System.out.println("friends count - " + replies.get(i).getUser().getFriendsCount());
+                    System.out.println("location - " + replies.get(i).getUser().getLocation());
+                    System.out.println(getCountryFromLocation(replies.get(i)));
+                    System.out.println("status count - " + replies.get(i).getUser().getStatusesCount());
+                    System.out.println("is verified? - " + replies.get(i).getUser().isVerified());
+                    System.out.println("===============================================");
+                }
+            }
         } catch (TwitterException ex) {
             Logger.getLogger(TwitterAnalysis.class.getName()).log(Level.SEVERE, null, ex);
         }
-        String user = "kyliejenner";
-
-        System.out.println("Getting Statuses for... " + user);
-        ArrayList<Status> statuses = tw.getStatuses(user);
-        System.out.println("Total Statuses: " + statuses.size());
-
-        // Print first status
-        System.out.println("OG Status: " + statuses.get(0).getText() + "\n============================================");
-
-        // Get replies
-        System.out.println("Getting replies for most recent status...");
-        ArrayList<Status> replies = tw.getDiscussion(statuses.get(0));
-        System.out.println("Total Replies: " + replies.size());
-
-        // Print replies
-        for (int i = 0; i < replies.size(); i++) {
-            if ((getContinentFromLocation(replies.get(i)) != null) || (replies.get(i).getGeoLocation() != null)) {
-
-                System.out.println("OG status ID - " + statuses.get(0).getId());
-                System.out.println("OG user ID - " + statuses.get(0).getUser().getName());
-                System.out.println("ID - " + replies.get(i).getUser().getId());
-                System.out.println("Name - " + replies.get(i).getUser().getName());
-                System.out.println("Screen Name - " + replies.get(i).getUser().getScreenName());
-                System.out.println("Comment - " + replies.get(i).getText());
-                System.out.println("hasSwear? - " + hasSwearWord(replies.get(i)));
-                System.out.println("hasPositiveWord? - " + hasPositiveWord(replies.get(i)));
-                System.out.println("hasNegativeWord? - " + hasNegativeWord(replies.get(i)));
-                System.out.println("hasPositiveEmoji? - " + hasPositiveEmoji(replies.get(i)));
-                System.out.println("hasNegativeEmoji? - " + hasNegativeEmoji(replies.get(i)));
-                System.out.println("TimeZone - " + replies.get(i).getUser().getTimeZone());
-                System.out.println("Lang - " + replies.get(i).getUser().getLang());
-                System.out.println("Created at - " + replies.get(i).getUser().getCreatedAt());
-                System.out.println("favouriteCount - " + replies.get(i).getFavoriteCount());
-                System.out.println("followerscount - " + replies.get(i).getUser().getFollowersCount());
-                System.out.println("friends count - " + replies.get(i).getUser().getFriendsCount());
-                System.out.println("location - " + replies.get(i).getUser().getLocation());
-                System.out.println("GeoLocation - " + replies.get(i).getGeoLocation());
-                System.out.println(getContinentFromLocation(replies.get(i)));
-//            if ((getContinentFromLocation(replies.get(i)) != null) || (replies.get(i).getGeoLocation() != null)) {
-//                System.out.println("Can't find country from location");
-//            } else {
-//                System.out.println(getContinentFromLocation(replies.get(i)));
-//            }
-                System.out.println("status count - " + replies.get(i).getUser().getStatusesCount());
-                System.out.println("is verified? - " + replies.get(i).getUser().isVerified());
-                System.out.println("===============================================");
-            }
-        }
     }
 
-    public static Country getContinentFromLocation(Status reply) {
+    public static Country getCountryFromLocation(Status reply) {
         JDBCWrapper wr = new JDBCWrapper("org.apache.derby.jdbc.ClientDriver", "jdbc:derby://localhost:1527/SocialMedia", "social", "fraz");
         SocialMediaDB db = new SocialMediaDB(wr);
         ArrayList<Country> countries = new ArrayList();
-        countries.addAll(db.getAllCountries());
+        ArrayList<State> states = new ArrayList();
 
+        countries.addAll(db.getAllCountries());
+        states.addAll(db.getAllStates());
+        String locationCaps = reply.getUser().getLocation().toUpperCase();
+
+        // Evaluate country nicknames/ special cases
+        if (locationCaps.contains("ENGLAND") || locationCaps.contains("SCOTLAND") || locationCaps.contains("WALES") || locationCaps.contains("NORTHEN IRELAND")) {
+            return db.getCountry("GB");
+        } else if (locationCaps.contains("NIGERIA")) {
+            return db.getCountry("NG");
+        } else if (locationCaps.contains("USA") || locationCaps.contains("UNITED STATES")) {
+            return db.getCountry("US");
+        } else if (locationCaps.contains("ANTIGUA") || locationCaps.contains("BARBUDA")) {
+            return db.getCountry("AG");
+        } else if (locationCaps.contains("BOSNIA")) {
+            return db.getCountry("BA");
+        } else if (locationCaps.contains("COCOS")) {
+            return db.getCountry("CC");
+        } else if (locationCaps.contains("SOUTH KOREA")) {
+            return db.getCountry("KR");
+        } else if (locationCaps.contains("RUSSIA")) {
+            return db.getCountry("RU");
+        } else if (locationCaps.contains("TRINIDAD") || locationCaps.contains("TOBAGO")) {
+            return db.getCountry("TT");
+        } else if (locationCaps.contains("UAE")) {
+            return db.getCountry("AE");
+        }
+
+        // evaluate US states
+        for (int i = 0; i < states.size(); i++) {
+            if (locationCaps.contains(states.get(i).getStateName().toUpperCase())) {
+                return db.getCountry("US");
+            }
+        }
+
+        // evaluate Countries
         for (int i = 0; i < countries.size(); i++) {
-            if (reply.getUser().getLocation().contains(countries.get(i).getCountry())) {
+            if (locationCaps.contains(countries.get(i).getCountry().toUpperCase())) {
                 return countries.get(i);
             }
         }

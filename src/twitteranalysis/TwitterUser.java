@@ -14,8 +14,6 @@ public class TwitterUser {
     private String name;
     private String screenName;
     private String comment;
-    private String timeZone;
-    private String language;
     private Date createdAt;
     private int followersCount;
     private int favouriteCount;

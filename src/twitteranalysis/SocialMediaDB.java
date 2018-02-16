@@ -64,15 +64,30 @@ public class SocialMediaDB {
         }
         return ret;
     }
-    
+
     public ArrayList<Country> getAllCountries() {
         ArrayList<Country> ret = new ArrayList();
         wrapper.createStatement();
         wrapper.createResultSet("SELECT * FROM countries");
         try {
             wrapper.getResultSet().next();
-            do {      
-                ret.add(new Country(wrapper.getResultSet().getString("code"),wrapper.getResultSet().getString("name"),wrapper.getResultSet().getString("continentcode")));
+            do {
+                ret.add(new Country(wrapper.getResultSet().getString("code"), wrapper.getResultSet().getString("name"), wrapper.getResultSet().getString("continentcode")));
+            } while (wrapper.getResultSet().next());
+        } catch (SQLException ex) {
+            Logger.getLogger(SocialMediaDB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return ret;
+    }
+
+    public ArrayList<State> getAllStates() {
+        ArrayList<State> ret = new ArrayList();
+        wrapper.createStatement();
+        wrapper.createResultSet("SELECT * FROM state");
+        try {
+            wrapper.getResultSet().next();
+            do {
+                ret.add(new State(wrapper.getResultSet().getString("code"), wrapper.getResultSet().getString("name")));
             } while (wrapper.getResultSet().next());
         } catch (SQLException ex) {
             Logger.getLogger(SocialMediaDB.class.getName()).log(Level.SEVERE, null, ex);
@@ -86,6 +101,19 @@ public class SocialMediaDB {
         wrapper.findRecord("KEYS", "KEYNAME", keyName);
         try {
             Key ret = new Key(wrapper.getResultSet().getInt("id"), wrapper.getResultSet().getString("platform"), wrapper.getResultSet().getString("keyName"), wrapper.getResultSet().getString("keyValue"));
+            return ret;
+        } catch (SQLException ex) {
+            Logger.getLogger(SocialMediaDB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+
+    public Country getCountry(String countryCode) {
+
+        wrapper.createStatement();
+        wrapper.findRecord("COUNTRIES", "CODE", countryCode);
+        try {
+            Country ret = new Country(wrapper.getResultSet().getString("code"), wrapper.getResultSet().getString("name"), wrapper.getResultSet().getString("continentcode"));
             return ret;
         } catch (SQLException ex) {
             Logger.getLogger(SocialMediaDB.class.getName()).log(Level.SEVERE, null, ex);

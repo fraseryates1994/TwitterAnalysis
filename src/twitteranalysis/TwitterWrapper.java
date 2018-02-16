@@ -46,7 +46,7 @@ public class TwitterWrapper {
         while (true) {
             try {
                 int size = statuses.size();
-                Paging page = new Paging(pageno++, 100);
+                Paging page = new Paging(pageno++, 1);
                 statuses.addAll(getTwitter().getUserTimeline(user, page));
                 if (statuses.size() == size) {
                     break;
