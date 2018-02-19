@@ -172,6 +172,29 @@ public class SocialMediaDB {
         }
     }
 
+    public void insertCondition(ArrayList<TwitterToDB> conditions, String tableName) {
+        wrapper.createStatement();
+        int idCount = 0;
+        int statusCount = 0;
+
+        for (TwitterToDB condition : conditions) {
+            try {
+                wrapper.getStatement().executeUpdate("insert into " + tableName + "(id, ogUserName, ogStatus, ogStatusId, ogComment,"
+                        + " followersCount, favouriteCount, friendCount, location, isVerified, hasSwear, hasPositiveWord, hasNegativeWord, hasPositiveEmoji,"
+                        + " hasNegativeEmoji) values (" + idCount + ",'" + condition.getOgUserName() + "','" + condition.getOgStatus() + "'," + statusCount
+                        + ",'" + condition.getComment() + "'," + condition.getFollowersCount() + "," + condition.getFavouriteCount() + "," + condition.getFriendCount() + ","
+                        + condition.getLocation() + "," + condition.getIsVerified() + "," + condition.getHasSwear() + "," + condition.getHasPositiveWord() + "," + condition.getHasNegativeWord()
+                        + "," + condition.getHasPositiveEmoji() + "," + condition.getHasNegativeEmoji() + ")");
+
+                idCount++;
+            } catch (SQLException ex) {
+                Logger.getLogger(SocialMediaDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        }
+        statusCount++;
+    }
+
     public void insertEmoji(String fileName, String tableName) {
         // Read from txt
         Scanner scan = new Scanner(twitteranalysis.SocialMediaDB.class.getResourceAsStream(fileName));

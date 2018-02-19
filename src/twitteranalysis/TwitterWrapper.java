@@ -23,11 +23,11 @@ public class TwitterWrapper {
         JDBCWrapper wr = new JDBCWrapper("org.apache.derby.jdbc.ClientDriver", "jdbc:derby://localhost:1527/SocialMedia", "social", "fraz");
         SocialMediaDB db = new SocialMediaDB(wr);
         ConfigurationBuilder cb = new ConfigurationBuilder();
-        String consumerKey =db.getKey("OAuthConsumerKey").getKayValue();
+        String consumerKey = db.getKey("OAuthConsumerKey").getKayValue();
         String consumerSecret = db.getKey("OAuthConsumerSecret").getKayValue();
-        String accessToken = db.getKey("OAuthAccessTokenTwitter").getKayValue(); 
+        String accessToken = db.getKey("OAuthAccessTokenTwitter").getKayValue();
         String accessTokenSecret = db.getKey("OAuthAccessTokenSecret").getKayValue();
-        
+
         cb.setOAuthConsumerKey(consumerKey);
         cb.setOAuthConsumerSecret(consumerSecret);
         cb.setOAuthAccessToken(accessToken);
@@ -60,82 +60,60 @@ public class TwitterWrapper {
     }
 
     public ArrayList<Status> getDiscussion(Status status) {
-    ArrayList<Status> replies = new ArrayList<>();
+        ArrayList<Status> replies = new ArrayList<>();
 
-    ArrayList<Status> all = null;
-
-    try {
-        long id = status.getId();
-        String screenname = status.getUser().getScreenName();
-
-        Query query = new Query("@" + screenname + " since_id:" + id);
-
-        System.out.println("query string: " + query.getQuery());
+        ArrayList<Status> all = null;
 
         try {
-            query.setCount(100);
-        } catch (Throwable e) {
-            // enlarge buffer error?
-            query.setCount(30);
-        }
+            long id = status.getId();
+            String screenname = status.getUser().getScreenName();
 
-        QueryResult result = twitter.search(query);
-        System.out.println("result: " + result.getTweets().size());
+            Query query = new Query("@" + screenname + " since_id:" + id);
 
-        all = new ArrayList<Status>();
+            System.out.println("query string: " + query.getQuery());
 
-        do {
-
-            List<Status> tweets = result.getTweets();
-
-            for (Status tweet : tweets)
-                if (tweet.getInReplyToStatusId() == id)
-                    all.add(tweet);
-
-            if (all.size() > 0) {
-                for (int i = all.size() - 1; i >= 0; i--)
-                    replies.add(all.get(i));
-                all.clear();
+            try {
+                query.setCount(100);
+            } catch (Throwable e) {
+                // enlarge buffer error?
+                query.setCount(30);
             }
 
-            query = result.nextQuery();
+            QueryResult result = twitter.search(query);
+            System.out.println("result: " + result.getTweets().size());
 
-            if (query != null)
-                result = twitter.search(query);
+            all = new ArrayList<Status>();
 
-        } while (query != null);
+            do {
 
-    } catch (Exception e) {
-        e.printStackTrace();
-    } catch (OutOfMemoryError e) {
-        e.printStackTrace();
+                List<Status> tweets = result.getTweets();
+
+                for (Status tweet : tweets) {
+                    if (tweet.getInReplyToStatusId() == id) {
+                        all.add(tweet);
+                    }
+                }
+
+                if (all.size() > 0) {
+                    for (int i = all.size() - 1; i >= 0; i--) {
+                        replies.add(all.get(i));
+                    }
+                    all.clear();
+                }
+
+                query = result.nextQuery();
+
+                if (query != null) {
+                    result = twitter.search(query);
+                }
+
+            } while (query != null);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } catch (OutOfMemoryError e) {
+            e.printStackTrace();
+        }
+        return replies;
     }
-    return replies;
-}
-
-//    public ArrayList<Status> getDiscussion(Status status) {
-//        ArrayList<Status> replies = new ArrayList<>();
-//
-//        try {
-//            long tweetID = status.getId();
-//            String screenName = status.getUser().getScreenName();
-//            Query query = new Query("@" + screenName + " since_id:" + tweetID);
-//            QueryResult results;
-//
-//            do {
-//                results = twitter.search(query);
-//                List<Status> tweets = results.getTweets();
-//
-//                for (Status tweet : tweets) {
-//                    if (tweet.getInReplyToStatusId() == tweetID) {
-//                        replies.add(tweet);
-//                    }
-//                }
-//            } while ((query = results.nextQuery()) != null);
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return replies;
-//    }
 }

@@ -8,24 +8,18 @@ import java.util.Date;
  */
 public class TwitterUser {
 
-    private String ogStatusID;
-    private String ogUserID;
-    private String id;
-    private String name;
-    private String screenName;
+    private String ogUserName;
+    private String ogStatus;
     private String comment;
-    private Date createdAt;
     private int followersCount;
     private int favouriteCount;
     private int friendCount;
-    private int statusCount;
-    private String location;
+    private Country location;
     private boolean isVerified;
     private boolean hasSwear;
     private boolean hasPositiveWord;
     private boolean hasNegativeWord;
     private boolean hasPositiveEmoji;
     private boolean hasNegativeEmoji;
-    
-   
+
 }

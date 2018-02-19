@@ -16,6 +16,8 @@ import twitter4j.TwitterException;
  */
 public class TwitterAnalysis {
 
+    public static ArrayList<TwitterToDB> twitterConditions = new ArrayList();
+
     public static void main(String[] args) {
         TwitterWrapper tw = new TwitterWrapper();
         try {
@@ -25,7 +27,7 @@ public class TwitterAnalysis {
                     searchTweetsRateLimit.getRemaining(),
                     searchTweetsRateLimit.getLimit(),
                     searchTweetsRateLimit.getSecondsUntilReset());
-
+            
             String user = "kyliejenner";
 
             System.out.println("Getting Statuses for... " + user);
@@ -43,30 +45,54 @@ public class TwitterAnalysis {
             // Print replies
             for (int i = 0; i < replies.size(); i++) {
                 if ((getCountryFromLocation(replies.get(i)) != null)) {
+                    TwitterToDB tu = new TwitterToDB();
+
                     System.out.println("OG status ID - " + statuses.get(1).getId());
-                    System.out.println("OG user ID - " + statuses.get(1).getUser().getName());
-                    System.out.println("ID - " + replies.get(i).getUser().getId());
-                    System.out.println("Name - " + replies.get(i).getUser().getName());
-                    System.out.println("Screen Name - " + replies.get(i).getUser().getScreenName());
+                    System.out.println("OG user name - " + statuses.get(1).getUser().getName());
+                    tu.setOgUserName(statuses.get(1).getUser().getName().replace("'", ""));
+                    System.out.println("OG status - " + statuses.get(1).getText());
+                    tu.setOgStatus(statuses.get(1).getText().replace("'", ""));
                     System.out.println("Comment - " + replies.get(i).getText());
+                    tu.setComment(replies.get(i).getText().replace("'", ""));
                     System.out.println("hasSwear? - " + hasSwearWord(replies.get(i)));
+                    tu.setHasSwear(hasSwearWord(replies.get(i)));
                     System.out.println("hasPositiveWord? - " + hasPositiveWord(replies.get(i)));
+                    tu.setHasPositiveWord(hasPositiveWord(replies.get(i)));
                     System.out.println("hasNegativeWord? - " + hasNegativeWord(replies.get(i)));
+                    tu.setHasNegativeWord(hasNegativeWord(replies.get(i)));
                     System.out.println("hasPositiveEmoji? - " + hasPositiveEmoji(replies.get(i)));
+                    tu.setHasPositiveEmoji(hasPositiveEmoji(replies.get(i)));
                     System.out.println("hasNegativeEmoji? - " + hasNegativeEmoji(replies.get(i)));
-                    System.out.println("TimeZone - " + replies.get(i).getUser().getTimeZone());
-                    System.out.println("Lang - " + replies.get(i).getUser().getLang());
-                    System.out.println("Created at - " + replies.get(i).getUser().getCreatedAt());
+                    tu.setHasnegativeEmoji(hasNegativeEmoji(replies.get(i)));
                     System.out.println("favouriteCount - " + replies.get(i).getFavoriteCount());
+                    tu.setFavouriteCount(replies.get(i).getFavoriteCount());
                     System.out.println("followerscount - " + replies.get(i).getUser().getFollowersCount());
+                    tu.setFollowersCount(replies.get(i).getUser().getFollowersCount());
                     System.out.println("friends count - " + replies.get(i).getUser().getFriendsCount());
+                    tu.setFriendCount(replies.get(i).getUser().getFriendsCount());
                     System.out.println("location - " + replies.get(i).getUser().getLocation());
+                    tu.setLocation(getCountryFromLocation(replies.get(i)));
                     System.out.println(getCountryFromLocation(replies.get(i)));
-                    System.out.println("status count - " + replies.get(i).getUser().getStatusesCount());
                     System.out.println("is verified? - " + replies.get(i).getUser().isVerified());
+                    tu.setIsVerified(replies.get(i).getUser().isVerified());
                     System.out.println("===============================================");
+
+                    twitterConditions.add(tu);
                 }
             }
+            Scanner reader = new Scanner(System.in);  // Reading from System.in
+            System.out.println("Would you like to write to DB? y/n");
+            String input = reader.next();
+            if (input.equals("y")) {
+                JDBCWrapper wr = new JDBCWrapper("org.apache.derby.jdbc.ClientDriver", "jdbc:derby://localhost:1527/SocialMedia", "social", "fraz");
+                SocialMediaDB db = new SocialMediaDB(wr);
+                db.insertCondition(twitterConditions, "CONDITIONS");
+                System.out.println("Write successful");
+                reader.close();
+            } else {
+                System.out.println("Conditions have not been saved to the database");
+            }
+
         } catch (TwitterException ex) {
             Logger.getLogger(TwitterAnalysis.class.getName()).log(Level.SEVERE, null, ex);
         }
