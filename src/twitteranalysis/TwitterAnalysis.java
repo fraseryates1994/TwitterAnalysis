@@ -1,6 +1,13 @@
 package twitteranalysis;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -22,86 +29,173 @@ public class TwitterAnalysis {
 
     public static void main(String[] args) {
         TwitterWrapper tw = new TwitterWrapper();
-        try {
-            Map<String, RateLimitStatus> rateLimitStatus = tw.getTwitter().getRateLimitStatus("search");
-            RateLimitStatus searchTweetsRateLimit = rateLimitStatus.get("/search/tweets");
-            System.out.printf("You have %d calls remaining out of %d, Limit resets in %d seconds\n",
-                    searchTweetsRateLimit.getRemaining(),
-                    searchTweetsRateLimit.getLimit(),
-                    searchTweetsRateLimit.getSecondsUntilReset());
+        System.out.println("Admin mode or Twitter search mode? admin/search");
+        String adminInput = reader.next();
 
-            //Scanner reader = new Scanner(System.in);  // Reading from System.in
-            System.out.println("Enter the name of the twitter account you would like to examine:");
-            String user = reader.next();
+        if (adminInput.toLowerCase().equals("search")) {
+            try {
+                Map<String, RateLimitStatus> rateLimitStatus = tw.getTwitter().getRateLimitStatus("search");
+                RateLimitStatus searchTweetsRateLimit = rateLimitStatus.get("/search/tweets");
+                System.out.printf("You have %d calls remaining out of %d, Limit resets in %d seconds\n",
+                        searchTweetsRateLimit.getRemaining(),
+                        searchTweetsRateLimit.getLimit(),
+                        searchTweetsRateLimit.getSecondsUntilReset());
 
-            System.out.println("Getting Statuses for... " + user);
-            List<Status> statuses = tw.getStatuses(user);
-            System.out.println("Total Statuses: " + statuses.size());
+                System.out.println("Enter the name of the twitter account you would like to examine:");
+                String user = reader.next();
 
-            System.out.println("Enter which status you would like to data mine:");
-            int statusIndex = reader.nextInt();
+                System.out.println("Getting Statuses for... " + user);
+                List<Status> statuses = tw.getStatuses(user);
+                System.out.println("Total Statuses: " + statuses.size());
 
-            // Print first status
-            System.out.println("OG Status: " + statuses.get(statusIndex - 1).getText() + "\n============================================");
+                System.out.println("Enter which status you would like to data mine:");
+                int statusIndex = reader.nextInt();
 
-            // Get replies
-            System.out.println("Getting replies for most recent status...");
-            ArrayList<Status> replies = tw.getDiscussion(statuses.get(statusIndex - 1));
-            System.out.println("Total Replies: " + replies.size());
+                // Print first status
+                System.out.println("OG Status: " + statuses.get(statusIndex - 1).getText() + "\n============================================");
 
-            // Print replies
-            for (int i = 0; i < replies.size(); i++) {
-                if ((getCountryFromLocation(replies.get(i)) != null)) {
-                    TwitterToDB tu = new TwitterToDB();
+                // Get replies
+                System.out.println("Getting replies for most recent status...");
+                ArrayList<Status> replies = tw.getDiscussion(statuses.get(statusIndex - 1));
+                System.out.println("Total Replies: " + replies.size());
 
-                    System.out.println("OG status ID - " + statuses.get(statusIndex - 1).getId());
-                    System.out.println("OG user name - " + statuses.get(statusIndex - 1).getUser().getName());
-                    tu.setOgUserName(statuses.get(1).getUser().getName().replace("'", ""));
-                    System.out.println("OG status - " + statuses.get(statusIndex - 1).getText());
-                    tu.setOgStatus(statuses.get(1).getText().replace("'", ""));
-                    System.out.println("Comment - " + replies.get(i).getText());
-                    tu.setComment(replies.get(i).getText().replace("'", ""));
-                    System.out.println("hasSwear? - " + hasSwearWord(replies.get(i)));
-                    tu.setHasSwear(hasSwearWord(replies.get(i)));
-                    System.out.println("hasPositiveWord? - " + hasPositiveWord(replies.get(i)));
-                    tu.setHasPositiveWord(hasPositiveWord(replies.get(i)));
-                    System.out.println("hasNegativeWord? - " + hasNegativeWord(replies.get(i)));
-                    tu.setHasNegativeWord(hasNegativeWord(replies.get(i)));
-                    System.out.println("hasPositiveEmoji? - " + hasPositiveEmoji(replies.get(i)));
-                    tu.setHasPositiveEmoji(hasPositiveEmoji(replies.get(i)));
-                    System.out.println("hasNegativeEmoji? - " + hasNegativeEmoji(replies.get(i)));
-                    tu.setHasnegativeEmoji(hasNegativeEmoji(replies.get(i)));
-                    System.out.println("favouriteCount - " + replies.get(i).getFavoriteCount());
-                    tu.setFavouriteCount(replies.get(i).getFavoriteCount());
-                    System.out.println("followerscount - " + replies.get(i).getUser().getFollowersCount());
-                    tu.setFollowersCount(replies.get(i).getUser().getFollowersCount());
-                    System.out.println("friends count - " + replies.get(i).getUser().getFriendsCount());
-                    tu.setFriendCount(replies.get(i).getUser().getFriendsCount());
-                    System.out.println("location - " + replies.get(i).getUser().getLocation());
-                    tu.setLocation(getCountryFromLocation(replies.get(i)));
-                    System.out.println(getCountryFromLocation(replies.get(i)));
-                    System.out.println("is verified? - " + replies.get(i).getUser().isVerified());
-                    tu.setIsVerified(replies.get(i).getUser().isVerified());
-                    System.out.println("===============================================");
+                int count = 0;
+                // Print replies
+                for (int i = 0; i < replies.size(); i++) {
+                    if ((getCountryFromLocation(replies.get(i)) != null)) {
+                        TwitterToDB tu = new TwitterToDB();
 
-                    twitterConditions.add(tu);
+                        System.out.println("OG status ID - " + statuses.get(statusIndex - 1).getId());
+                        tu.setId(count);
+                        System.out.println("OG user name - " + statuses.get(statusIndex - 1).getUser().getName());
+                        tu.setOgUserName(cleanText(statuses.get(statusIndex - 1).getUser().getName().replace("'", "")));
+                        System.out.println("OG status - " + statuses.get(statusIndex - 1).getText());
+                        tu.setOgStatus(cleanText(statuses.get(statusIndex - 1).getText().replace("'", "")));
+                        System.out.println("Comment - " + replies.get(i).getText());
+                        tu.setComment(cleanText(replies.get(i).getText().replace("'", "")));
+                        System.out.println("hasSwear? - " + hasSwearWord(replies.get(i)));
+                        tu.setHasSwear(hasSwearWord(replies.get(i)));
+                        System.out.println("hasPositiveWord? - " + hasPositiveWord(replies.get(i)));
+                        tu.setHasPositiveWord(hasPositiveWord(replies.get(i)));
+                        System.out.println("hasNegativeWord? - " + hasNegativeWord(replies.get(i)));
+                        tu.setHasNegativeWord(hasNegativeWord(replies.get(i)));
+                        System.out.println("hasPositiveEmoji? - " + hasPositiveEmoji(replies.get(i)));
+                        tu.setHasPositiveEmoji(hasPositiveEmoji(replies.get(i)));
+                        System.out.println("hasNegativeEmoji? - " + hasNegativeEmoji(replies.get(i)));
+                        tu.setHasnegativeEmoji(hasNegativeEmoji(replies.get(i)));
+                        System.out.println("favouriteCount - " + replies.get(i).getFavoriteCount());
+                        tu.setFavouriteCount(replies.get(i).getFavoriteCount());
+                        System.out.println("followerscount - " + replies.get(i).getUser().getFollowersCount());
+                        tu.setFollowersCount(replies.get(i).getUser().getFollowersCount());
+                        System.out.println("friends count - " + replies.get(i).getUser().getFriendsCount());
+                        tu.setFriendCount(replies.get(i).getUser().getFriendsCount());
+                        System.out.println("location - " + replies.get(i).getUser().getLocation());
+                        tu.setLocation(getCountryFromLocation(replies.get(i)));
+                        System.out.println(getCountryFromLocation(replies.get(i)));
+                        System.out.println("is verified? - " + replies.get(i).getUser().isVerified());
+                        tu.setIsVerified(replies.get(i).getUser().isVerified());
+                        System.out.println("===============================================");
+
+                        twitterConditions.add(tu);
+                        count++;
+                    }
                 }
-            }
-            System.out.println("Would you like to write to DB? y/n");
-            String input = reader.next();
-            if (input.equals("y")) {
-                JDBCWrapper wr = new JDBCWrapper("org.apache.derby.jdbc.ClientDriver", "jdbc:derby://localhost:1527/SocialMedia", "social", "fraz");
-                SocialMediaDB db = new SocialMediaDB(wr);
-                db.insertCondition(twitterConditions, "CONDITIONS");
-                System.out.println("Write successful");
-                reader.close();
-            } else {
-                System.out.println("Conditions have not been saved to the database");
-                reader.close();
-            }
+                System.out.println("Would you like to write to DB? y/n");
+                String dbUserInput = reader.next();
+                if (dbUserInput.equals("y")) {
+                    // Write to txt file for supervised learning 
+                    System.out.println("Enter the table name/ DB name:");
+                    String fileName = reader.next();
+                    File file = new File("C:\\Users\\Fraser\\Google Drive\\GitProjects\\TwitterAnalysis\\src\\twitteranalysis\\SupervisedLearningTxt\\" + fileName + ".txt");
+                    writeConditionsToTxt(file);
 
-        } catch (TwitterException ex) {
-            Logger.getLogger(TwitterAnalysis.class.getName()).log(Level.SEVERE, null, ex);
+                    // Write to DB
+                    JDBCWrapper wr = new JDBCWrapper("org.apache.derby.jdbc.ClientDriver", "jdbc:derby://localhost:1527/SocialMedia", "social", "fraz");
+                    SocialMediaDB db = new SocialMediaDB(wr);
+
+                    // Write to txt file for supervised learning 
+                    db.createTable(fileName);
+                    db.insertCondition(twitterConditions, fileName);
+                } else {
+                    System.out.println("Conditions have not been saved to the database");
+                    reader.close();
+                }
+            } catch (TwitterException ex) {
+                Logger.getLogger(TwitterAnalysis.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } else if (adminInput.toLowerCase().equals("admin")) {
+            System.out.println("Which table would you like to update with their classifiers?");
+            String fileInput = reader.next();
+
+            // Read from txt file
+            File file = new File("C:\\Users\\Fraser\\Google Drive\\GitProjects\\TwitterAnalysis\\src\\twitteranalysis\\SupervisedLearningTxt\\" + fileInput + ".txt");
+            HashMap<Integer, Integer> hmap = readConditionsFromTxt(file);
+
+            // Write to DB
+            JDBCWrapper wr = new JDBCWrapper("org.apache.derby.jdbc.ClientDriver", "jdbc:derby://localhost:1527/SocialMedia", "social", "fraz");
+            SocialMediaDB db = new SocialMediaDB(wr);
+            db.insertClassifier(hmap, fileInput);
+            System.out.println("Successfully updated " + fileInput + " classifiers");
+        }
+    }
+
+    public static String cleanText(String text) {
+        text = text.replace("\n", "\\n");
+        text = text.replace("\t", "\\t");
+
+        return text;
+    }
+
+    public static HashMap<Integer, Integer> readConditionsFromTxt(File file) {
+        BufferedReader br = null;
+        FileReader fr = null;
+        HashMap<Integer, Integer> hmap = new HashMap<Integer, Integer>();
+
+        try {
+            //br = new BufferedReader(new FileReader(FILENAME));
+            fr = new FileReader(file);
+            br = new BufferedReader(fr);
+
+            String sCurrentLine;
+            while ((sCurrentLine = br.readLine()) != null) {
+                String array[] = sCurrentLine.split("\\|");
+                hmap.put(Integer.parseInt(array[0].replace(" ", "")), Integer.parseInt(array[4].replace(" ", "")));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (br != null) {
+                    br.close();
+                }
+                if (fr != null) {
+                    fr.close();
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return hmap;
+    }
+
+    public static void writeConditionsToTxt(File file) {
+        try {
+            if (file.createNewFile()) {
+                System.out.println("File is created!");
+            } else {
+                System.out.println("File already exists.");
+            }
+        } catch (IOException ex) {
+            System.out.println("Create file exception");
+        }
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
+            for (TwitterToDB twitterCondition : twitterConditions) {
+                bw.write(twitterCondition.getId() + " | " + twitterCondition.getOgUserName() + " | " + twitterCondition.getOgStatus() + " | " + twitterCondition.getComment() + " | ");
+                bw.write("\n");
+            }
+        } catch (IOException e) {
+            System.out.println("Write file exception");
         }
     }
 

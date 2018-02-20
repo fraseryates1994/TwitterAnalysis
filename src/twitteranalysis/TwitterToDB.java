@@ -5,7 +5,8 @@ package twitteranalysis;
  * @author Fraser
  */
 public class TwitterToDB {
-;
+
+    private int id;
     private String ogUserName;
     private String ogStatus;
     private String comment;
@@ -22,7 +23,11 @@ public class TwitterToDB {
 
     public TwitterToDB() {
     }
-    
+
+    public void setId(int id) {
+        this.id = id;
+    }
+ 
     public void setOgUserName(String ogUserName) {
         this.ogUserName = ogUserName;
     }
@@ -131,6 +136,10 @@ public class TwitterToDB {
         }
     }
 
+    public int getId() {
+        return id;
+    }
+    
     public String getOgUserName() {
         return ogUserName;
     }

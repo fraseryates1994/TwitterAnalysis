@@ -2,6 +2,8 @@ package twitteranalysis;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -172,32 +174,72 @@ public class SocialMediaDB {
         }
     }
 
+    public void createTable(String tableName) {
+        try {
+            wrapper.createStatement();
+
+            String sql = "CREATE TABLE " + tableName
+                    + "(id int,"
+                    + " ogUserName VARCHAR(64),"
+                    + " ogStatus VARCHAR(500),"
+                    + " ogComment VARCHAR(500),"
+                    + " followersCount int,"
+                    + " favouriteCount int,"
+                    + " friendCount int,"
+                    + " location int,"
+                    + " isVerified int,"
+                    + " hasSwear int,"
+                    + " hasPositiveWord int,"
+                    + " hasNegativeWord int,"
+                    + " hasPositiveEmoji int,"
+                    + " hasNegativeEmoji int,"
+                    + " classifier int)";
+
+            wrapper.getStatement().executeUpdate(sql);
+
+            System.out.println("Created " + tableName + " table successfully");
+        } catch (SQLException ex) {
+            Logger.getLogger(SocialMediaDB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void insertClassifier(HashMap<Integer, Integer> hmap, String tableName) {
+        wrapper.createStatement();
+        try {
+
+            for (Map.Entry<Integer, Integer> entry : hmap.entrySet()) {
+                wrapper.getStatement().executeUpdate("UPDATE " + tableName 
+                        + " SET classifier=" + entry.getValue()
+                        + " WHERE id =" + entry.getKey());
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(SocialMediaDB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     public void insertCondition(ArrayList<TwitterToDB> conditions, String tableName) {
         wrapper.createStatement();
-        int idCount = 0;
-        int statusCount = 0;
 
-        for (TwitterToDB condition : conditions) {
-            try {
-                wrapper.getStatement().executeUpdate("insert into " + tableName + "(id, ogUserName, ogStatus, ogStatusId, ogComment,"
+        try {
+            for (TwitterToDB condition : conditions) {
+                wrapper.getStatement().executeUpdate("insert into " + tableName + "(id, ogUserName, ogStatus, ogComment,"
                         + " followersCount, favouriteCount, friendCount, location, isVerified, hasSwear, hasPositiveWord, hasNegativeWord, hasPositiveEmoji,"
-                        + " hasNegativeEmoji) values (" + idCount + ",'" + condition.getOgUserName() + "','" + condition.getOgStatus() + "'," + statusCount
-                        + ",'" + condition.getComment() + "'," + condition.getFollowersCount() + "," + condition.getFavouriteCount() + "," + condition.getFriendCount() + ","
+                        + " hasNegativeEmoji) values (" + condition.getId() + ",'" + condition.getOgUserName() + "','" + condition.getOgStatus()
+                        + "','" + condition.getComment() + "'," + condition.getFollowersCount() + "," + condition.getFavouriteCount() + "," + condition.getFriendCount() + ","
                         + condition.getLocation() + "," + condition.getIsVerified() + "," + condition.getHasSwear() + "," + condition.getHasPositiveWord() + "," + condition.getHasNegativeWord()
                         + "," + condition.getHasPositiveEmoji() + "," + condition.getHasNegativeEmoji() + ")");
 
-                idCount++;
-            } catch (SQLException ex) {
-                Logger.getLogger(SocialMediaDB.class.getName()).log(Level.SEVERE, null, ex);
             }
-
+        } catch (SQLException ex) {
+            Logger.getLogger(SocialMediaDB.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
-        statusCount++;
     }
 
     public void insertEmoji(String fileName, String tableName) {
         // Read from txt
-        Scanner scan = new Scanner(twitteranalysis.SocialMediaDB.class.getResourceAsStream(fileName));
+        Scanner scan = new Scanner(twitteranalysis.SocialMediaDB.class
+                .getResourceAsStream(fileName));
         ArrayList<String> array = new ArrayList();
         int count = 1;
 
@@ -210,9 +252,11 @@ public class SocialMediaDB {
             for (String string : array) {
                 wrapper.getStatement().executeUpdate("insert into " + tableName + "(id, emoji) values (" + count + ",'" + string + "')");
                 count++;
+
             }
         } catch (SQLException ex) {
-            Logger.getLogger(JDBCWrapper.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(JDBCWrapper.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 

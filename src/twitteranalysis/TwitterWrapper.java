@@ -64,8 +64,6 @@ public class TwitterWrapper {
 
             Query query = new Query("@" + screenname + " since_id:" + id);
 
-            System.out.println("query string: " + query.getQuery());
-
             try {
                 query.setCount(100);
             } catch (Throwable e) {
@@ -74,7 +72,6 @@ public class TwitterWrapper {
             }
 
             QueryResult result = twitter.search(query);
-            System.out.println("result: " + result.getTweets().size());
 
             all = new ArrayList<Status>();
 
