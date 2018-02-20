@@ -39,22 +39,16 @@ public class TwitterWrapper {
         return twitter;
     }
 
-    public ArrayList<Status> getStatuses(String user) {
-        int pageno = 1;
-        ArrayList<Status> statuses = new ArrayList();
-
-        while (true) {
-            try {
-                int size = statuses.size();
-                Paging page = new Paging(pageno++, 1);
-                statuses.addAll(getTwitter().getUserTimeline(user, page));
-                if (statuses.size() == size) {
-                    break;
-                }
-            } catch (TwitterException e) {
-                System.out.println("Get Statuses Exception");
-                e.printStackTrace();
-            }
+    public List<Status> getStatuses(String user) {
+        List<Status> statuses = new ArrayList();
+        int i = 0;
+        try {
+            //First param of Paging() is the page number, second is the number per page (this is capped around 200 I think.
+            Paging paging = new Paging(1, 100);
+            statuses = twitter.getUserTimeline(user, paging);
+        } catch (TwitterException e) {
+            System.out.println("Invalid username of the twitter account");
+            e.printStackTrace();
         }
         return statuses;
     }

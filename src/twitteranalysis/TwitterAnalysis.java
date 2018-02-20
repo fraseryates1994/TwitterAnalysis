@@ -1,6 +1,7 @@
 package twitteranalysis;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -17,6 +18,7 @@ import twitter4j.TwitterException;
 public class TwitterAnalysis {
 
     public static ArrayList<TwitterToDB> twitterConditions = new ArrayList();
+    private static Scanner reader = new Scanner(System.in);  // Reading from System.in
 
     public static void main(String[] args) {
         TwitterWrapper tw = new TwitterWrapper();
@@ -27,19 +29,24 @@ public class TwitterAnalysis {
                     searchTweetsRateLimit.getRemaining(),
                     searchTweetsRateLimit.getLimit(),
                     searchTweetsRateLimit.getSecondsUntilReset());
-            
-            String user = "kyliejenner";
+
+            //Scanner reader = new Scanner(System.in);  // Reading from System.in
+            System.out.println("Enter the name of the twitter account you would like to examine:");
+            String user = reader.next();
 
             System.out.println("Getting Statuses for... " + user);
-            ArrayList<Status> statuses = tw.getStatuses(user);
+            List<Status> statuses = tw.getStatuses(user);
             System.out.println("Total Statuses: " + statuses.size());
 
+            System.out.println("Enter which status you would like to data mine:");
+            int statusIndex = reader.nextInt();
+
             // Print first status
-            System.out.println("OG Status: " + statuses.get(1).getText() + "\n============================================");
+            System.out.println("OG Status: " + statuses.get(statusIndex - 1).getText() + "\n============================================");
 
             // Get replies
             System.out.println("Getting replies for most recent status...");
-            ArrayList<Status> replies = tw.getDiscussion(statuses.get(1));
+            ArrayList<Status> replies = tw.getDiscussion(statuses.get(statusIndex - 1));
             System.out.println("Total Replies: " + replies.size());
 
             // Print replies
@@ -47,10 +54,10 @@ public class TwitterAnalysis {
                 if ((getCountryFromLocation(replies.get(i)) != null)) {
                     TwitterToDB tu = new TwitterToDB();
 
-                    System.out.println("OG status ID - " + statuses.get(1).getId());
-                    System.out.println("OG user name - " + statuses.get(1).getUser().getName());
+                    System.out.println("OG status ID - " + statuses.get(statusIndex - 1).getId());
+                    System.out.println("OG user name - " + statuses.get(statusIndex - 1).getUser().getName());
                     tu.setOgUserName(statuses.get(1).getUser().getName().replace("'", ""));
-                    System.out.println("OG status - " + statuses.get(1).getText());
+                    System.out.println("OG status - " + statuses.get(statusIndex - 1).getText());
                     tu.setOgStatus(statuses.get(1).getText().replace("'", ""));
                     System.out.println("Comment - " + replies.get(i).getText());
                     tu.setComment(replies.get(i).getText().replace("'", ""));
@@ -80,7 +87,6 @@ public class TwitterAnalysis {
                     twitterConditions.add(tu);
                 }
             }
-            Scanner reader = new Scanner(System.in);  // Reading from System.in
             System.out.println("Would you like to write to DB? y/n");
             String input = reader.next();
             if (input.equals("y")) {
@@ -91,6 +97,7 @@ public class TwitterAnalysis {
                 reader.close();
             } else {
                 System.out.println("Conditions have not been saved to the database");
+                reader.close();
             }
 
         } catch (TwitterException ex) {
