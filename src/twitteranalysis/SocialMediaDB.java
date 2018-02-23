@@ -183,6 +183,7 @@ public class SocialMediaDB {
                     + " ogUserName VARCHAR(64),"
                     + " ogStatus VARCHAR(500),"
                     + " ogComment VARCHAR(500),"
+                    + " contextId int,"
                     + " followersCount int,"
                     + " favouriteCount int,"
                     + " friendCount int,"
@@ -206,9 +207,8 @@ public class SocialMediaDB {
     public void insertClassifier(HashMap<Integer, Integer> hmap, String tableName) {
         wrapper.createStatement();
         try {
-
             for (Map.Entry<Integer, Integer> entry : hmap.entrySet()) {
-                wrapper.getStatement().executeUpdate("UPDATE " + tableName 
+                wrapper.getStatement().executeUpdate("UPDATE " + tableName
                         + " SET classifier=" + entry.getValue()
                         + " WHERE id =" + entry.getKey());
             }
@@ -217,18 +217,67 @@ public class SocialMediaDB {
         }
     }
 
-    public void insertCondition(ArrayList<TwitterToDB> conditions, String tableName) {
+    public int getMaxContextId(String tableName) {
+        int maxId = 0;
         wrapper.createStatement();
+        wrapper.createResultSet("SELECT MAX(id) FROM " + tableName);
+        try {
+            wrapper.getResultSet().next();
+            while (wrapper.getResultSet().next()) {
+                maxId = wrapper.getResultSet().getInt("MAX(contentId)");
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(SocialMediaDB.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NullPointerException ex) {
+            return 0;
+        }
+        return maxId;
+    }
+    
+    public int getMaxId(String tableName) {
+        wrapper.createStatement();
+        wrapper.createResultSet("SELECT MAX(id) FROM " + tableName);
+        int maxId = 0;
+        try {
+            wrapper.getResultSet().next();
+            while (wrapper.getResultSet().next()) {
+                maxId = wrapper.getResultSet().getInt("MAX(id)");
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(SocialMediaDB.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NullPointerException ex) {
+            return 0;
+        }
+        return maxId;
+    }
 
+    public void insertCondition(ArrayList<TwitterToDB> conditions, String tableName, int maxEntries) {
+        wrapper.createStatement();
+        int count = 0;
+        int oldMaxId = getMaxId(tableName);
+        int oldMaxContextId = getMaxContextId(tableName);
+        
+        // increase id if it's not the first entry
+        if (oldMaxId != 0) {
+            oldMaxId = oldMaxId + 1;
+        }
+        if (oldMaxContextId != 0) {
+            oldMaxContextId = oldMaxContextId + 1;
+        }
         try {
             for (TwitterToDB condition : conditions) {
                 wrapper.getStatement().executeUpdate("insert into " + tableName + "(id, ogUserName, ogStatus, ogComment,"
-                        + " followersCount, favouriteCount, friendCount, location, isVerified, hasSwear, hasPositiveWord, hasNegativeWord, hasPositiveEmoji,"
-                        + " hasNegativeEmoji) values (" + condition.getId() + ",'" + condition.getOgUserName() + "','" + condition.getOgStatus()
-                        + "','" + condition.getComment() + "'," + condition.getFollowersCount() + "," + condition.getFavouriteCount() + "," + condition.getFriendCount() + ","
+                        + " contextId, followersCount, favouriteCount, friendCount, location, isVerified, hasSwear, hasPositiveWord, hasNegativeWord, hasPositiveEmoji,"
+                        + " hasNegativeEmoji) values (" + oldMaxId + ",'" + condition.getOgUserName() + "','" + condition.getOgStatus()
+                        + "','" + condition.getComment() + "'," + oldMaxContextId +","+ condition.getFollowersCount() + "," + condition.getFavouriteCount() + "," + condition.getFriendCount() + ","
                         + condition.getLocation() + "," + condition.getIsVerified() + "," + condition.getHasSwear() + "," + condition.getHasPositiveWord() + "," + condition.getHasNegativeWord()
                         + "," + condition.getHasPositiveEmoji() + "," + condition.getHasNegativeEmoji() + ")");
 
+                if (maxEntries - 1 <= count) {
+                    break;
+                }
+                count++;
+                oldMaxId++;
             }
         } catch (SQLException ex) {
             Logger.getLogger(SocialMediaDB.class
