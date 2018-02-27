@@ -26,6 +26,8 @@ public class TwitterAnalysis {
 
     public static ArrayList<TwitterToDB> twitterConditions = new ArrayList();
     private static Scanner reader = new Scanner(System.in);  // Reading from System.in
+    private static JDBCWrapper wr = new JDBCWrapper("org.apache.derby.jdbc.ClientDriver", "jdbc:derby://localhost:1527/SocialMedia", "social", "fraz");
+    private static SocialMediaDB db = new SocialMediaDB(wr);
 
     public static void main(String[] args) {
         TwitterWrapper tw = new TwitterWrapper();
@@ -33,71 +35,54 @@ public class TwitterAnalysis {
         String adminInput = reader.next();
 
         if (adminInput.toLowerCase().equals("search")) {
-            try {
-                Map<String, RateLimitStatus> rateLimitStatus = tw.getTwitter().getRateLimitStatus("search");
-                RateLimitStatus searchTweetsRateLimit = rateLimitStatus.get("/search/tweets");
-                System.out.printf("You have %d calls remaining out of %d, Limit resets in %d seconds\n",
-                        searchTweetsRateLimit.getRemaining(),
-                        searchTweetsRateLimit.getLimit(),
-                        searchTweetsRateLimit.getSecondsUntilReset());
+            // Print rate limit details
+            printRateLimitDetails(tw);
 
-                System.out.println("Enter the name of the twitter account you would like to examine:");
-                String user = reader.next();
+            // Get Twitter account user input
+            System.out.println("Enter the name of the twitter account you would like to examine:");
+            String user = reader.next();
+            System.out.println("Getting Statuses for... " + user);
+            List<Status> statuses = tw.getStatuses(user);
+            System.out.println("Total Statuses: " + statuses.size());
 
-                System.out.println("Getting Statuses for... " + user);
-                List<Status> statuses = tw.getStatuses(user);
-                System.out.println("Total Statuses: " + statuses.size());
+            // Get which status to mine and get replies
+            System.out.println("Enter which status you would like to data mine:");
+            int statusIndex = reader.nextInt() - 1;
+            System.out.println("OG Status: " + statuses.get(statusIndex).getText() + "\n============================================");
+            System.out.println("Getting replies for most recent status...");
+            ArrayList<Status> replies = tw.getDiscussion(statuses.get(statusIndex));
+            System.out.println("Total Replies: " + replies.size());
 
-                System.out.println("Enter which status you would like to data mine:");
-                int statusIndex = reader.nextInt() - 1;
+            // Loop through replies and set twitter variables appropriately
+            int replyCount = setTwitterDetails(replies, statuses, statusIndex);
+            System.out.println("Total replies gathered: " + replyCount);
 
-                // Print first status
-                System.out.println("OG Status: " + statuses.get(statusIndex).getText() + "\n============================================");
+            // Ask user if they want to write twitter variables to DB
+            System.out.println("Would you like to write to DB? y/n");
+            String dbUserInput = reader.next();
+            if (dbUserInput.equals("y")) {
+                // Ask how many entries the use wants to write to DB
+                System.out.println("Enter the max entries you would like to write to the DB:");
+                int maxEntries = reader.nextInt();
 
-                // Get replies
-                System.out.println("Getting replies for most recent status...");
-                ArrayList<Status> replies = tw.getDiscussion(statuses.get(statusIndex));
-                System.out.println("Total Replies: " + replies.size());
+                // Ask if user would like to create a new table or update an existing one?
+                System.out.println("Would you like to create a new table or update an existing one? new/ update");
+                String newOrUpdate = reader.next();
 
-                // Loop through replies and set twitter variables appropriately
-                int replyCount = setTwitterDetails(replies, statuses, statusIndex);
-                System.out.println("Total replies gathered: " + replyCount);
+                // Ask user for table name/ txt file name
+                System.out.println("Enter your chosen file/ table name:");
+                String fileName = reader.next();
 
-                // Ask user if they want to write twitter variables to DB
-                System.out.println("Would you like to write to DB? y/n");
-                String dbUserInput = reader.next();
-
-                if (dbUserInput.equals("y")) {
-                    // Ask how many entries the use wants to write to DB
-                    System.out.println("Enter the max entries you would like to write to the DB:");
-                    int maxEntries = reader.nextInt();
-
-                    // Ask if user would like to create a nee table or update an existing one?
-                    System.out.println("Would you like to create a new table or update an existing one? new/ update");
-                    String newOrUpdate = reader.next();
-
-                    // Ask user for table name/ txt file name
-                    System.out.println("Enter your chosen file/ table name:");
-                    String fileName = reader.next();
-
-                    // Write to DB
-                    JDBCWrapper wr = new JDBCWrapper("org.apache.derby.jdbc.ClientDriver", "jdbc:derby://localhost:1527/SocialMedia", "social", "fraz");
-                    SocialMediaDB db = new SocialMediaDB(wr);
-                    
-                    // Make new table if user enters 'new'
-                    if (newOrUpdate.toLowerCase().equals("new")) {
-                        db.createTable(fileName);
-                    }
-                    db.insertCondition(twitterConditions, fileName, maxEntries);
-
-                    // Write to txt file for supervised learning 
-                    writeConditionsToTxt(fileName, maxEntries);
-                } else {
-                    System.out.println("Conditions have not been saved to the database");
-                    reader.close();
+                // Make new table if user enters 'new'
+                if (newOrUpdate.toLowerCase().equals("new")) {
+                    db.createTable(fileName);
                 }
-            } catch (TwitterException ex) {
-                Logger.getLogger(TwitterAnalysis.class.getName()).log(Level.SEVERE, null, ex);
+                // // Write to txt file and DB for supervised learning 
+                int oldMaxId = db.insertCondition(twitterConditions, fileName, maxEntries);
+                writeConditionsToTxt(fileName, oldMaxId, maxEntries);
+            } else {
+                System.out.println("Conditions have not been saved to the database");
+                reader.close();
             }
         } else if (adminInput.toLowerCase().equals("admin")) {
             // Ask user for table/ txt file name
@@ -109,10 +94,23 @@ public class TwitterAnalysis {
             HashMap<Integer, Integer> hmap = readConditionsFromTxt(file);
 
             // Write to DB
-            JDBCWrapper wr = new JDBCWrapper("org.apache.derby.jdbc.ClientDriver", "jdbc:derby://localhost:1527/SocialMedia", "social", "fraz");
-            SocialMediaDB db = new SocialMediaDB(wr);
             db.insertClassifier(hmap, fileInput);
             System.out.println("Successfully updated " + fileInput + " classifiers");
+        }
+    }
+
+    public static void printRateLimitDetails(TwitterWrapper tw) {
+        Map<String, RateLimitStatus> rateLimitStatus;
+        try {
+            rateLimitStatus = tw.getTwitter().getRateLimitStatus("search");
+
+            RateLimitStatus searchTweetsRateLimit = rateLimitStatus.get("/search/tweets");
+            System.out.printf("You have %d calls remaining out of %d, Limit resets in %d seconds\n",
+                    searchTweetsRateLimit.getRemaining(),
+                    searchTweetsRateLimit.getLimit(),
+                    searchTweetsRateLimit.getSecondsUntilReset());
+        } catch (TwitterException ex) {
+            Logger.getLogger(TwitterAnalysis.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -199,13 +197,11 @@ public class TwitterAnalysis {
         return hmap;
     }
 
-    public static void writeConditionsToTxt(String tableName, int maxEntries) {
+    public static void writeConditionsToTxt(String tableName, int oldMaxId, int maxEntries) {
         JDBCWrapper wr = new JDBCWrapper("org.apache.derby.jdbc.ClientDriver", "jdbc:derby://localhost:1527/SocialMedia", "social", "fraz");
         SocialMediaDB db = new SocialMediaDB(wr);
-        int oldMaxId = db.getMaxId(tableName);
-
         File file = new File("C:\\Users\\Fraser\\Google Drive\\GitProjects\\TwitterAnalysis\\src\\twitteranalysis\\SupervisedLearningTxt\\" + tableName + ".txt");
-
+      
         try {
             if (file.createNewFile()) {
                 System.out.println("File is created!");
@@ -233,9 +229,7 @@ public class TwitterAnalysis {
         }
     }
 
-
-
-public static Country getCountryFromLocation(Status reply) {
+    public static Country getCountryFromLocation(Status reply) {
         JDBCWrapper wr = new JDBCWrapper("org.apache.derby.jdbc.ClientDriver", "jdbc:derby://localhost:1527/SocialMedia", "social", "fraz");
         SocialMediaDB db = new SocialMediaDB(wr);
         ArrayList<Country> countries = new ArrayList();
