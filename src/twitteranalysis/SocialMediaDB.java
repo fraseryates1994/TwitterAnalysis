@@ -255,7 +255,7 @@ public class SocialMediaDB {
         return maxId;
     }
 
-    public int insertCondition(ArrayList<TwitterToDB> conditions, String tableName, int maxEntries) {
+    public int insertCondition(ArrayList<EncodeChromosome> conditions, String tableName, int maxEntries) {
         wrapper.createStatement();
         int count = 0;
         int temp = getMaxId(tableName) + 1;
@@ -263,7 +263,7 @@ public class SocialMediaDB {
         int oldMaxContextId = getMaxContextId(tableName) + 1;
 
         try {
-            for (TwitterToDB condition : conditions) {
+            for (EncodeChromosome condition : conditions) {
                 wrapper.getStatement().executeUpdate("insert into " + tableName + "(id, ogUserName, ogStatus, ogComment,"
                         + " contextId, followersCount, favouriteCount, friendCount, location, isVerified, hasSwear, hasPositiveWord, hasNegativeWord, hasPositiveEmoji,"
                         + " hasNegativeEmoji) values (" + oldMaxId + ",'" + condition.getOgUserName() + "','" + condition.getOgStatus()

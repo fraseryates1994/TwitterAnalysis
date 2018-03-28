@@ -4,7 +4,7 @@ package twitteranalysis;
  *
  * @author Fraser
  */
-public class TwitterToDB {
+public class EncodeChromosome {
 
     private String ogUserName;
     private String ogStatus;
@@ -20,7 +20,7 @@ public class TwitterToDB {
     private int hasPositiveEmoji;
     private int hasNegativeEmoji;
 
-    public TwitterToDB() {
+    public EncodeChromosome() {
     }
 
  
