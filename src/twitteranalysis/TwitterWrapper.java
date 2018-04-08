@@ -48,7 +48,7 @@ public class TwitterWrapper {
             statuses = twitter.getUserTimeline(user, paging);
         } catch (TwitterException e) {
             System.out.println("Invalid username of the twitter account");
-            e.printStackTrace();
+            return null;
         }
         return statuses;
     }
