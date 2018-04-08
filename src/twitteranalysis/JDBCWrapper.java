@@ -24,7 +24,7 @@ public class JDBCWrapper {
             Class.forName(driver);
 
             con = DriverManager.getConnection(db, dbName, dbPassword);
-            
+
         } catch (SQLException ex) {
             Logger.getLogger(JDBCWrapper.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ClassNotFoundException ex) {
@@ -34,6 +34,9 @@ public class JDBCWrapper {
 
     //Taking a parameter of target table, returns the number of rows.
     public int getTableCount(String table) {
+        if (table.isEmpty()) {
+            return 0;
+        }
         int ret = 0;
         try {
             createStatement();
@@ -69,6 +72,10 @@ public class JDBCWrapper {
 
     //Takes the table name, column and value to search for. If found returns true and result set to the record.
     public boolean findRecord(String table, String column, String searchValue) {
+        if (table.isEmpty() || column.isEmpty() || searchValue.isEmpty()) {
+            return false;
+        }
+        
         createResultSet("select * from " + table + " where \"" + column + "\" = '" + searchValue + "'");
         try {
             if (this.getResultSet().next()) {

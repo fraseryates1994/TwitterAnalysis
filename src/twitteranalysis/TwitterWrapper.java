@@ -44,7 +44,7 @@ public class TwitterWrapper {
         int i = 0;
         try {
             //First param of Paging() is the page number, second is the number per page (this is capped around 200 I think.
-            Paging paging = new Paging(1, 10);
+            Paging paging = new Paging(1, 20);
             statuses = twitter.getUserTimeline(user, paging);
         } catch (TwitterException e) {
             System.out.println("Invalid username of the twitter account");

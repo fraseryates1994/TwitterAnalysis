@@ -18,6 +18,11 @@ public class ConditionCheck {
 
         countries.addAll(db.getAllCountries());
         states.addAll(db.getAllStates());
+        
+        if (reply == null) {
+             return null;
+         }
+        
         String locationCaps = reply.getUser().getLocation().toUpperCase();
 
         // Evaluate country nicknames/ special cases
@@ -64,6 +69,10 @@ public class ConditionCheck {
         SocialMediaDB db = new SocialMediaDB(wr);
         ArrayList<String> positiveWords = new ArrayList();
         positiveWords.addAll(db.getAllPositiveWords());
+        
+        if (reply == null) {
+             return false;
+         }
 
         // Remove tag
         Scanner sc = new Scanner(reply.getText());
@@ -84,6 +93,10 @@ public class ConditionCheck {
         ArrayList<String> negativeWords = new ArrayList();
         negativeWords.addAll(db.getAllNegativeWords());
 
+        if (reply == null) {
+             return false;
+         }
+        
         // Remove tag
         Scanner sc = new Scanner(reply.getText());
         String tag = sc.next();
@@ -102,6 +115,10 @@ public class ConditionCheck {
         SocialMediaDB db = new SocialMediaDB(wr);
         ArrayList<String> positiveEmoji = new ArrayList();
         positiveEmoji.addAll(db.getAllPositiveEmojis());
+        
+        if (reply == null) {
+             return false;
+         }
 
         for (int i = 0; i < positiveEmoji.size(); i++) {
             if (reply.getText().contains(positiveEmoji.get(i))) {
@@ -116,6 +133,10 @@ public class ConditionCheck {
         SocialMediaDB db = new SocialMediaDB(wr);
         ArrayList<String> negativeEmoji = new ArrayList();
         negativeEmoji.addAll(db.getAllNegativeEmojis());
+        
+        if (reply == null) {
+             return false;
+         }
 
         for (int i = 0; i < negativeEmoji.size(); i++) {
             if (reply.getText().contains(negativeEmoji.get(i))) {
@@ -130,6 +151,10 @@ public class ConditionCheck {
         SocialMediaDB db = new SocialMediaDB(wr);
         ArrayList<String> swears = new ArrayList();
         swears.addAll(db.getAllSwears());
+        
+        if (reply == null) {
+             return false;
+         }
 
         for (int i = 0; i < swears.size(); i++) {
             if (reply.getText().contains(swears.get(i))) {
