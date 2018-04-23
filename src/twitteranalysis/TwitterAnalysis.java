@@ -1,6 +1,7 @@
 package twitteranalysis;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.InputMismatchException;
@@ -66,7 +67,6 @@ public class TwitterAnalysis {
                         }
                     }
                     int statusIndex = Integer.parseInt(statusIndexString);
-                    System.out.println("Total Replies: " + replies.size());
                     System.out.println("Getting replies for \"" + cleanText(statuses.get(statusIndex).getText() + "\""));
 
                     // Get Replies
@@ -97,23 +97,49 @@ public class TwitterAnalysis {
                         if (newOrUpdate.toLowerCase().equals("new")) {
                             db.createTable(fileName);
                         }
+                        
                         // // Write to txt file and DB for supervised learning
                         int oldMaxId = db.insertCondition(twitterConditions, fileName, maxEntries);
                         writeConditionsToTxt(fileName, oldMaxId, maxEntries);
+                        twitterConditions.clear();
                     } else {
                         System.out.println("Conditions have not been saved to the database");
                     }
                     break;
                 case "admin":
                     // Ask user for table/ txt file name
-                    System.out.println("Which table would you like to update with their classifiers?");
-                    String fileInput = reader.next();
-                    // Read from txt file
-                    File file = new File("C:\\Users\\Fraser\\Google Drive\\GitProjects\\TwitterAnalysis\\src\\twitteranalysis\\SupervisedLearningTxt\\" + fileInput + ".txt");
-                    HashMap<Integer, Integer> hmap = readConditionsFromTxt(file);
-                    // Write to DB
-                    db.insertClassifier(hmap, fileInput);
-                    System.out.println("Successfully updated " + fileInput + " classifiers");
+                    System.out.println("What would you like to do?\n"
+                            + "0 --> View data mining requests\n"
+                            + "1 --> Update a table with classifiers");
+                    String testInput = reader.next();
+
+                    if (testInput.equals("0")) {
+                        ArrayList<Request> requests = db.getAllRequests();
+                        int i = 1;
+                        for (Request request : requests) {
+                            System.out.println("Request Number " + i);
+                            System.out.println("Name: " + request.getName() + "\n"
+                            + "Email: " + request.getEmail() + "\n"
+                                    + "Request: " + request.getRequest() + "\n");
+                            i++;
+                        }
+                    } else if (testInput.equals("1")) {
+                        // Ask user for table/ txt file name
+                        System.out.println("Which table would you like to update with their classifiers?");
+                        String fileInput = reader.next();
+                        // Read from txt file
+                        File file = new File("C:\\Users\\Fraser\\Google Drive\\GitProjects\\TwitterAnalysis\\src\\twitteranalysis\\SupervisedLearningTxt\\" + fileInput + ".txt");
+                        try {
+                        HashMap<Integer, Integer> hmap = readConditionsFromTxt(file);
+                        // Write to DB
+                        db.insertClassifier(hmap, fileInput);
+                        System.out.println("Successfully updated " + fileInput + " classifiers");
+                        } catch (IOException ex) {
+                            System.out.println("Table does not exist");
+                        } catch (NumberFormatException e) {
+                            System.out.println("There has been user input error updating the classifiers");
+                        }
+                    }
                     break;
                 case "exit":
                     reader.close();

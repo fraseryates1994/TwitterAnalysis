@@ -16,6 +16,21 @@ public class SocialMediaDB {
         wrapper = w;
     }
 
+    public ArrayList<Request> getAllRequests() {
+        ArrayList<Request> ret = new ArrayList();
+        wrapper.createStatement();
+        wrapper.createResultSet("SELECT * FROM requests");
+        try {
+            wrapper.getResultSet().next();
+            do {
+                ret.add(new Request(wrapper.getResultSet().getString("name"), wrapper.getResultSet().getString("email"), wrapper.getResultSet().getString("request")));
+            } while (wrapper.getResultSet().next());
+        } catch (SQLException ex) {
+            Logger.getLogger(SocialMediaDB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return ret;
+    }
+
     /*
     Name: getAllMembers
     Parameters: none

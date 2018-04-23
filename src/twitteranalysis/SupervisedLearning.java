@@ -14,8 +14,8 @@ import static twitteranalysis.TwitterAnalysis.twitterConditions;
  * @author Fraser
  */
 public class SupervisedLearning {
-    
-     public static HashMap<Integer, Integer> readConditionsFromTxt(File file) {
+
+    public static HashMap<Integer, Integer> readConditionsFromTxt(File file) throws IOException, NumberFormatException {
         BufferedReader br = null;
         FileReader fr = null;
         HashMap<Integer, Integer> hmap = new HashMap<Integer, Integer>();
@@ -30,8 +30,6 @@ public class SupervisedLearning {
                 String array[] = sCurrentLine.split("\\|");
                 hmap.put(Integer.parseInt(array[0].replace(" ", "")), Integer.parseInt(array[4].replace(" ", "")));
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         } finally {
             try {
                 if (br != null) {
@@ -46,8 +44,8 @@ public class SupervisedLearning {
         }
         return hmap;
     }
-     
-      public static void writeConditionsToTxt(String tableName, int oldMaxId, int maxEntries) {
+
+    public static void writeConditionsToTxt(String tableName, int oldMaxId, int maxEntries) {
         JDBCWrapper wr = new JDBCWrapper("org.apache.derby.jdbc.ClientDriver", "jdbc:derby://localhost:1527/SocialMedia", "social", "fraz");
         SocialMediaDB db = new SocialMediaDB(wr);
         File file = new File("C:\\Users\\Fraser\\Google Drive\\GitProjects\\TwitterAnalysis\\src\\twitteranalysis\\SupervisedLearningTxt\\" + tableName + ".txt");
@@ -56,7 +54,7 @@ public class SupervisedLearning {
             if (file.createNewFile()) {
                 System.out.println("File is created!");
             } else {
-                System.out.println("File already exists.");
+                System.out.println("File exists.");
             }
         } catch (IOException ex) {
             System.out.println("Create file exception");
